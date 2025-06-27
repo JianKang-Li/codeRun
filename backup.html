@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>JavaScript Run</title>
+  <link rel="stylesheet" href="./css/index.css">
+  <script src="./js/index.js" defer></script>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+</head>
+
+<body>
+  <header>
+    <h1>JavaScript Run</h1>
+  </header>
+
+  <div class="controls">
+    <button id="clean" class="btn btn-danger" accesskey="c">清空</button>
+    <button id="run" class="btn btn-success" accesskey="r">运行代码</button>
+    <button id="copy" class="btn">复制代码</button>
+  </div>
+
+  <main class="df">
+    <div class="container">
+      <textarea id="code" placeholder="请书写javaScript代码" autofocus></textarea>
+    </div>
+
+    <div class="container">
+      <textarea id="show" readonly placeholder="运行结果"></textarea>
+    </div>
+  </main>
+
+  <script>
+    // 注册Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(reg => console.log('Service Worker registered:', reg))
+          .catch(err => console.log('Service Worker registration failed:', err));
+      });
+    }
+  </script>
+</body>
+
+</html>
