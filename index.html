@@ -98,15 +98,32 @@
       fill: #f0f7ff;
     }
 
-    textarea {
-      width: 100%;
+    .code-editor-wrapper {
+      display: flex;
+      background: #f8fafc;
+      border-bottom: 1px solid #eef2f7;
       min-height: 320px;
-      padding: 24px;
+      position: relative;
+    }
+
+    .line-numbers {
+      width: 60px;
+      text-align: right;
+      background-color: #eef2f7;
+      color: #718096;
+      overflow: hidden;
+      user-select: none;
+      border-right: 1px solid #e2e8f0;
+    }
+
+    .line-numbers span {
+      display: block;
+    }
+
+    textarea {
+      flex: 1;
       border: none;
       resize: none;
-      font-family: 'Fira Code', 'Courier New', monospace;
-      font-size: 15px;
-      line-height: 1.6;
       background: #f8fafc;
       color: #2d3748;
       border-bottom: 1px solid #eef2f7;
@@ -117,6 +134,16 @@
       outline: none;
       background: #f0f7ff;
       box-shadow: inset 0 0 0 2px #dbeafe;
+    }
+
+    .line-numbers,
+    #inputCode {
+      min-height: 320px;
+      max-height: 30vh;
+      overflow-y: auto;
+      font-size: 15px;
+      line-height: 1.6;
+      padding: 14px 10px;
     }
 
     .output-area {
@@ -284,25 +311,21 @@
     }
 
     /* 滚动条样式 */
-    textarea::-webkit-scrollbar,
-    .output-area::-webkit-scrollbar {
+    *::-webkit-scrollbar {
       width: 8px;
     }
 
-    textarea::-webkit-scrollbar-track,
-    .output-area::-webkit-scrollbar-track {
+    *::-webkit-scrollbar-track {
       background: #f1f5f9;
       border-radius: 4px;
     }
 
-    textarea::-webkit-scrollbar-thumb,
-    .output-area::-webkit-scrollbar-thumb {
+    *::-webkit-scrollbar-thumb {
       background: #cbd5e0;
       border-radius: 4px;
     }
 
-    textarea::-webkit-scrollbar-thumb:hover,
-    .output-area::-webkit-scrollbar-thumb:hover {
+    *::-webkit-scrollbar-thumb:hover {
       background: #a0aec0;
     }
   </style>
@@ -325,7 +348,12 @@
           </svg>
           代码编辑器
         </div>
-        <textarea id="inputCode" placeholder="在此输入JavaScript代码..."></textarea>
+        <div class="code-editor-wrapper">
+          <div class="line-numbers" id="lineNumbers">
+            <span>1</span>
+          </div>
+          <textarea id="inputCode" placeholder="在此输入JavaScript代码..."></textarea>
+        </div>
       </div>
 
       <div class="output-section">
@@ -389,8 +417,33 @@
       const copyBtn = document.getElementById('copyBtn')
       const notification = document.getElementById('notification')
       const notificationText = document.getElementById('notificationText')
+      const lineNumbers = document.getElementById('lineNumbers')
       const tab = '  '
       const tabLen = tab.length
+
+      // 初始行号设置
+      updateLineNumbers()
+      // 窗口调整大小时更新行号
+      window.addEventListener('resize', updateLineNumbers)
+
+      // 更新行号显示
+      function updateLineNumbers() {
+        const lines = inputCode.value.split('\n').length
+        let numbers = ''
+
+        for (let i = 1; i <= lines; i++) {
+          numbers += `<span>${i}</span>`
+        }
+
+        lineNumbers.innerHTML = numbers
+      }
+
+      // 滚动同步
+      function syncScroll() {
+        lineNumbers.scrollTop = inputCode.scrollTop
+      }
+
+      inputCode.addEventListener('scroll', syncScroll)
 
       // 清空输入区域
       clearBtn.addEventListener('click', function () {
@@ -455,6 +508,24 @@
 
       // 支持tab键
       inputCode.addEventListener('keydown', event => dealTab(event))
+
+      function debounce(handle, delay = 1000) {
+        let timer = null
+
+        return function (...args) {
+          const _self = this
+          const _args = args
+
+          clearTimeout(timer)
+          timer = setTimeout(() => {
+            handle.apply(_self, _args)
+          }, delay)
+        }
+      }
+
+      const debounceUpdate = debounce(updateLineNumbers, 200)
+
+      inputCode.addEventListener('keyup', event => debounceUpdate(event))
 
       function removeTab(text, start, end) {
         const singleLine = typeof end === 'undefined'
@@ -524,8 +595,7 @@
           obj.selectionStart = newStart
           obj.selectionEnd = newEnd
           e.preventDefault()
-        }
-        else if (e.key === 'Tab') {
+        } else if (e.key === 'Tab') {
           if (start === end) {
             text = text.substring(0, start) + tab + text.substring(end)
             obj.value = text
