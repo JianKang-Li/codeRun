@@ -448,6 +448,7 @@
       // 清空输入区域
       clearBtn.addEventListener('click', function () {
         inputCode.value = ''
+        updateLineNumbers()
         showNotification('输入区域已清空')
       })
 
