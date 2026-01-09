@@ -448,6 +448,7 @@
       // 清空输入区域
       clearBtn.addEventListener('click', function () {
         inputCode.value = ''
+        outputCode.textContent = '执行结果将显示在这里...'
         updateLineNumbers()
         showNotification('输入区域已清空')
       })
@@ -481,7 +482,7 @@
           console.log = originalConsoleLog
 
           // 显示输出
-          outputCode.textContent = output || '代码已执行，但没有输出内容。'
+          outputCode.textContent = output || ''
           showNotification('代码执行成功')
         } catch (error) {
           outputCode.textContent = '错误: ' + error.message
