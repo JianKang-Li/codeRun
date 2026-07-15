@@ -8,6 +8,14 @@
   <link rel="manifest" href="./manifest.json" />
   <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
   <style>
+    :root {
+      --editor-font: 'Fira Code', 'Consolas', 'Courier New', monospace;
+      --editor-font-size: 14px;
+      --editor-line-height: 1.6;
+      --editor-padding: 10px 12px;
+      --editor-tab-size: 2;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -113,26 +121,14 @@
       background: #45a041;
     }
 
-    .toolbar-btn.clear-btn {
-      background: #5a5a5a;
-    }
-
-    .toolbar-btn.clear-btn:hover {
-      background: #6a6a6a;
-    }
-
-    .toolbar-btn.copy-btn {
-      background: #5a5a5a;
-    }
-
-    .toolbar-btn.copy-btn:hover {
-      background: #6a6a6a;
-    }
-
+    .toolbar-btn.clear-btn,
+    .toolbar-btn.copy-btn,
     .toolbar-btn.save-btn {
       background: #5a5a5a;
     }
 
+    .toolbar-btn.clear-btn:hover,
+    .toolbar-btn.copy-btn:hover,
     .toolbar-btn.save-btn:hover {
       background: #6a6a6a;
     }
@@ -186,6 +182,7 @@
       display: flex;
       overflow: hidden;
       background: #1e1e1e;
+      position: relative;
     }
 
     .line-numbers {
@@ -196,9 +193,9 @@
       overflow: hidden;
       user-select: none;
       padding: 10px 8px 10px 0;
-      font-family: 'Fira Code', 'Consolas', 'Courier New', monospace;
-      font-size: 14px;
-      line-height: 1.6;
+      font-family: var(--editor-font);
+      font-size: var(--editor-font-size);
+      line-height: var(--editor-line-height);
       flex-shrink: 0;
       border-right: 1px solid #333333;
     }
@@ -213,13 +210,13 @@
       resize: none;
       background: #1e1e1e;
       color: #d4d4d4;
-      padding: 10px 12px;
-      font-family: 'Fira Code', 'Consolas', 'Courier New', monospace;
-      font-size: 14px;
-      line-height: 1.6;
+      padding: var(--editor-padding);
+      font-family: var(--editor-font);
+      font-size: var(--editor-font-size);
+      line-height: var(--editor-line-height);
       outline: none;
-      overflow-y: auto;
-      tab-size: 2;
+      overflow-y: scroll;
+      tab-size: var(--editor-tab-size);
     }
 
     #inputCode::placeholder {
@@ -322,12 +319,12 @@
       flex: 1;
       background: #1e1e1e;
       padding: 10px 12px;
-      font-family: 'Fira Code', 'Consolas', 'Courier New', monospace;
+      font-family: var(--editor-font);
       white-space: pre-wrap;
       overflow: auto;
       color: #cccccc;
-      line-height: 1.6;
-      font-size: 14px;
+      line-height: var(--editor-line-height);
+      font-size: var(--editor-font-size);
     }
 
     .output-area .output-line {
@@ -430,7 +427,6 @@
 
     ::-webkit-scrollbar-thumb {
       background: #424242;
-      border-radius: 0;
     }
 
     ::-webkit-scrollbar-thumb:hover {
@@ -439,6 +435,153 @@
 
     ::-webkit-scrollbar-corner {
       background: #1e1e1e;
+    }
+
+    /* ===== 高亮覆盖层 ===== */
+    .highlight-overlay {
+      position: absolute;
+      top: 0;
+      left: 50px;
+      right: 0;
+      bottom: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 1;
+      font-family: var(--editor-font);
+      font-size: var(--editor-font-size);
+      line-height: var(--editor-line-height);
+      padding: var(--editor-padding);
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      color: #d4d4d4;
+      tab-size: var(--editor-tab-size);
+    }
+
+    .highlight-overlay mark {
+      background: rgba(234, 196, 53, 0.3);
+      color: #d4d4d4;
+      border-radius: 2px;
+    }
+
+    .highlight-overlay mark.current {
+      background: rgba(234, 196, 53, 0.7);
+      outline: 1px solid rgba(234, 196, 53, 0.9);
+    }
+
+    #inputCode.has-highlight {
+      color: transparent;
+      caret-color: #d4d4d4;
+    }
+
+    /* ===== 查找替换面板 ===== */
+    .find-replace-panel {
+      position: absolute;
+      top: 0;
+      right: 0;
+      z-index: 10;
+      background: #252526;
+      border: 1px solid #3c3c3c;
+      border-top: none;
+      border-right: none;
+      border-radius: 0 0 0 6px;
+      padding: 4px;
+      display: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      min-width: 380px;
+      font-size: 13px;
+    }
+
+    .find-replace-panel.visible {
+      display: block;
+    }
+
+    .find-row,
+    .replace-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 0;
+    }
+
+    .find-input {
+      flex: 1;
+      min-width: 100px;
+      height: 24px;
+      background: #3c3c3c;
+      border: 1px solid #3c3c3c;
+      color: #cccccc;
+      padding: 0 6px;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      border-radius: 2px;
+    }
+
+    .find-input:focus {
+      border-color: #007acc;
+    }
+
+    .find-input.error {
+      border-color: #f44747;
+      background: #3c2020;
+    }
+
+    .match-count {
+      font-size: 12px;
+      color: #858585;
+      min-width: 50px;
+      text-align: center;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    .match-count.no-matches {
+      color: #f44747;
+    }
+
+    .find-nav-btn,
+    .find-option-btn,
+    .close-btn,
+    .replace-btn {
+      background: none;
+      border: none;
+      color: #858585;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .find-nav-btn:hover,
+    .find-option-btn:hover,
+    .close-btn:hover,
+    .replace-btn:hover {
+      background: #505050;
+      color: #cccccc;
+    }
+
+    .find-option-btn {
+      font-weight: 600;
+      font-size: 13px;
+      min-width: 24px;
+      height: 22px;
+      border: 1px solid transparent;
+    }
+
+    .find-option-btn.active {
+      background: #094771;
+      color: #ffffff;
+      border-color: #007acc;
+    }
+
+    .replace-btn {
+      padding: 2px 8px;
     }
 
     /* ===== 响应式 ===== */
@@ -460,7 +603,6 @@
       .toolbar-btn span {
         display: none;
       }
-
     }
   </style>
 </head>
@@ -514,6 +656,30 @@
           <span>1</span>
         </div>
         <textarea id="inputCode" placeholder="// 在此输入JavaScript代码...&#10;// 按 Ctrl+Enter 运行&#10;&#10;console.log('Hello, World!');" spellcheck="false"></textarea>
+        <div class="highlight-overlay" id="highlightOverlay"></div>
+        <div class="find-replace-panel" id="findReplacePanel">
+          <div class="find-row">
+            <input type="text" id="findInput" class="find-input" placeholder="查找" spellcheck="false" />
+            <span class="match-count" id="matchCount"></span>
+            <button class="find-nav-btn" id="prevMatchBtn" title="上一个 (Shift+Enter)">
+              <svg width="16" height="16" viewBox="0 0 16 16"><path fill="currentColor" d="M3 9l5-5 5 5H3z"/></svg>
+            </button>
+            <button class="find-nav-btn" id="nextMatchBtn" title="下一个 (Enter)">
+              <svg width="16" height="16" viewBox="0 0 16 16"><path fill="currentColor" d="M3 7l5 5 5-5H3z"/></svg>
+            </button>
+            <button class="find-option-btn" id="caseSensitiveBtn" title="区分大小写 (Alt+C)">Aa</button>
+            <button class="find-option-btn" id="wholeWordBtn" title="全词匹配 (Alt+W)">Ab</button>
+            <button class="find-option-btn" id="regexBtn" title="正则表达式 (Alt+R)">.*</button>
+            <button class="close-btn" id="closeFindBtn" title="关闭 (Escape)">
+              <svg width="16" height="16" viewBox="0 0 16 16"><path fill="currentColor" d="M8 8.707l3.646 3.647.708-.707L8.707 8l3.647-3.646-.707-.708L8 7.293 4.354 3.646l-.707.708L7.293 8l-3.646 3.646.707.708L8 8.707z"/></svg>
+            </button>
+          </div>
+          <div class="replace-row" id="replaceRow">
+            <input type="text" id="replaceInput" class="find-input" placeholder="替换" spellcheck="false" />
+            <button class="replace-btn" id="replaceOneBtn" title="替换">替换</button>
+            <button class="replace-btn" id="replaceAllBtn" title="全部替换">全部替换</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -570,10 +736,17 @@
       const editorPanel = document.getElementById('editorPanel')
       const outputPanel = document.getElementById('outputPanel')
       const resizer = document.getElementById('resizer')
-      const mainContent = document.querySelector('.main-content')
       const tab = '  '
       const tabLen = tab.length
       const STORAGE_KEY = 'jsRunner_savedCode'
+
+      function debounce(handle, delay = 200) {
+        let timer = null
+        return function (...args) {
+          clearTimeout(timer)
+          timer = setTimeout(() => handle.apply(this, args), delay)
+        }
+      }
 
       // ===== localStorage 保存/恢复 =====
       function saveToStorage() {
@@ -616,16 +789,14 @@
 
       function updateLineNumbers() {
         const lines = inputCode.value.split('\n').length
-        let numbers = ''
-        for (let i = 1; i <= lines; i++) {
-          numbers += `<span>${i}</span>`
-        }
-        lineNumbers.innerHTML = numbers
+        lineNumbers.innerHTML = Array.from({ length: lines }, (_, i) => `<span>${i + 1}</span>`).join('')
       }
 
       // ===== 滚动同步 =====
       inputCode.addEventListener('scroll', function () {
         lineNumbers.scrollTop = inputCode.scrollTop
+        highlightOverlay.scrollTop = inputCode.scrollTop
+        highlightOverlay.scrollLeft = inputCode.scrollLeft
       })
 
       // ===== 光标位置 =====
@@ -640,10 +811,7 @@
       }
 
       inputCode.addEventListener('click', updateCursorInfo)
-      inputCode.addEventListener('keyup', updateCursorInfo)
-      inputCode.addEventListener('input', function () {
-        updateCursorInfo()
-      })
+      inputCode.addEventListener('input', updateCursorInfo)
 
       // ===== 可拖拽分隔条 =====
       let isResizing = false
@@ -711,24 +879,14 @@
         }
 
         try {
-          const originalConsoleLog = console.log
-          const originalConsoleWarn = console.warn
-          const originalConsoleError = console.error
+          const originals = { log: console.log, warn: console.warn, error: console.error }
           let output = ''
 
-          console.log = function (...args) {
-            output += formatOutput(args, 'log')
-            originalConsoleLog.apply(console, args)
-          }
-
-          console.warn = function (...args) {
-            output += formatOutput(args, 'warn')
-            originalConsoleWarn.apply(console, args)
-          }
-
-          console.error = function (...args) {
-            output += formatOutput(args, 'error')
-            originalConsoleError.apply(console, args)
+          for (const method of ['log', 'warn', 'error']) {
+            console[method] = function (...args) {
+              output += formatOutput(args, method)
+              originals[method].apply(console, args)
+            }
           }
 
           const result = eval(code)
@@ -736,9 +894,7 @@
             output += formatOutput([result], 'result')
           }
 
-          console.log = originalConsoleLog
-          console.warn = originalConsoleWarn
-          console.error = originalConsoleError
+          Object.assign(console, originals)
 
           if (output) {
             outputCode.innerHTML = output
@@ -755,28 +911,16 @@
       function formatOutput(args, type) {
         const prompt = type === 'warn' ? '⚠' : type === 'error' ? '✕' : type === 'result' ? '←' : '›'
         const cssClass = type === 'error' ? 'output-error' : ''
-        let content = ''
-        for (let i = 0; i < args.length; i++) {
-          if (args[i] instanceof Error) {
-            content += escapeHtml(args[i].message)
-          } else if (typeof args[i] === 'object') {
-            try {
-              content += escapeHtml(JSON.stringify(args[i], null, 2))
-            } catch (e) {
-              content += escapeHtml(String(args[i]))
-            }
-          } else {
-            content += escapeHtml(String(args[i]))
-          }
-          if (i < args.length - 1) content += ' '
-        }
+        const content = args.map(a => {
+          if (a instanceof Error) return escapeHtml(a.message)
+          if (typeof a === 'object') try { return escapeHtml(JSON.stringify(a, null, 2)) } catch { return escapeHtml(String(a)) }
+          return escapeHtml(String(a))
+        }).join(' ')
         return `<div class="output-line"><span class="output-prompt">${prompt}</span><span class="${cssClass}">${content}</span></div>`
       }
 
       function escapeHtml(text) {
-        const div = document.createElement('div')
-        div.textContent = text
-        return div.innerHTML
+        return text.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
       }
 
       // ===== 复制代码 =====
@@ -810,14 +954,6 @@
 
       // ===== Tab键支持 =====
       inputCode.addEventListener('keydown', dealTab)
-
-      function debounce(handle, delay = 200) {
-        let timer = null
-        return function (...args) {
-          clearTimeout(timer)
-          timer = setTimeout(() => handle.apply(this, args), delay)
-        }
-      }
 
       const debounceUpdate = debounce(updateLineNumbers, 100)
       inputCode.addEventListener('keyup', debounceUpdate)
@@ -872,7 +1008,6 @@
         const end = obj.selectionEnd
         let text = obj.value
         const selectionText = text.substring(start, end)
-        let valueChanged = false
 
         if (e.shiftKey && e.key === 'Tab') {
           let newStart = 0
@@ -885,7 +1020,7 @@
           obj.value = text
           obj.selectionStart = newStart
           obj.selectionEnd = newEnd
-          valueChanged = true
+          debounceSave()
           e.preventDefault()
         } else if (e.key === 'Tab') {
           if (start === end) {
@@ -912,27 +1047,299 @@
             obj.selectionStart = start + tabLen
             obj.selectionEnd = start + tabLen
           }
-          valueChanged = true
-          e.preventDefault()
-        }
-
-        if (valueChanged) {
           debounceSave()
+          e.preventDefault()
         }
       }
 
+      // ===== 查找替换 =====
+      const findReplacePanel = document.getElementById('findReplacePanel')
+      const findInput = document.getElementById('findInput')
+      const replaceInput = document.getElementById('replaceInput')
+      const matchCountEl = document.getElementById('matchCount')
+      const prevMatchBtn = document.getElementById('prevMatchBtn')
+      const nextMatchBtn = document.getElementById('nextMatchBtn')
+      const caseSensitiveBtn = document.getElementById('caseSensitiveBtn')
+      const wholeWordBtn = document.getElementById('wholeWordBtn')
+      const regexBtn = document.getElementById('regexBtn')
+      const closeFindBtn = document.getElementById('closeFindBtn')
+      const replaceOneBtn = document.getElementById('replaceOneBtn')
+      const replaceAllBtn = document.getElementById('replaceAllBtn')
+      const highlightOverlay = document.getElementById('highlightOverlay')
+
+      const findState = {
+        panelVisible: false,
+        caseSensitive: false,
+        wholeWord: false,
+        useRegex: false,
+        matches: [],
+        currentMatch: -1,
+      }
+
+      function performFind() {
+        const text = inputCode.value
+        const query = findInput.value
+
+        findState.matches = []
+        findState.currentMatch = -1
+
+        if (!query) {
+          updateMatchCount()
+          updateHighlight()
+          return
+        }
+
+        const flags = 'g' + (findState.caseSensitive ? '' : 'i')
+        let regex
+        try {
+          if (findState.useRegex) {
+            regex = new RegExp(query, flags)
+          } else {
+            const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+            const pattern = findState.wholeWord ? `\\b${escaped}\\b` : escaped
+            regex = new RegExp(pattern, flags)
+          }
+        } catch (e) {
+          findInput.classList.add('error')
+          matchCountEl.textContent = '无效正则'
+          matchCountEl.classList.add('no-matches')
+          updateHighlight()
+          return
+        }
+
+        findInput.classList.remove('error')
+        matchCountEl.classList.remove('no-matches')
+
+        let match
+        while ((match = regex.exec(text)) !== null) {
+          if (match[0].length === 0) {
+            regex.lastIndex++
+            continue
+          }
+          findState.matches.push({ index: match.index, length: match[0].length })
+          if (findState.matches.length > 10000) break
+        }
+
+        if (findState.matches.length > 0) {
+          findState.currentMatch = 0
+          scrollToCurrentMatch()
+        }
+
+        updateMatchCount()
+        updateHighlight()
+      }
+
+      function updateMatchCount() {
+        const total = findState.matches.length
+        if (total === 0) {
+          if (findInput.value === '') {
+            matchCountEl.textContent = ''
+            matchCountEl.classList.remove('no-matches')
+          } else {
+            matchCountEl.textContent = '无结果'
+            matchCountEl.classList.add('no-matches')
+          }
+        } else {
+          matchCountEl.textContent = `${findState.currentMatch + 1}/${total}`
+          matchCountEl.classList.remove('no-matches')
+        }
+      }
+
+      function updateHighlight() {
+        const text = inputCode.value
+        const matches = findState.matches
+        const currentIdx = findState.currentMatch
+
+        if (matches.length === 0) {
+          highlightOverlay.innerHTML = ''
+          inputCode.classList.remove('has-highlight')
+          return
+        }
+
+        inputCode.classList.add('has-highlight')
+
+        let html = ''
+        let lastEnd = 0
+
+        for (let i = 0; i < matches.length; i++) {
+          const m = matches[i]
+          html += escapeHtml(text.substring(lastEnd, m.index))
+          html += `<mark class="${i === currentIdx ? 'current' : ''}">${escapeHtml(text.substring(m.index, m.index + m.length))}</mark>`
+          lastEnd = m.index + m.length
+        }
+        html += escapeHtml(text.substring(lastEnd))
+        html += '\n'
+
+        highlightOverlay.innerHTML = html
+        highlightOverlay.scrollTop = inputCode.scrollTop
+        highlightOverlay.scrollLeft = inputCode.scrollLeft
+      }
+
+      function goToMatch(direction) {
+        if (findState.matches.length === 0) return
+        const len = findState.matches.length
+        findState.currentMatch = direction === 'next'
+          ? (findState.currentMatch + 1) % len
+          : (findState.currentMatch - 1 + len) % len
+
+        updateMatchCount()
+        updateHighlight()
+        scrollToCurrentMatch()
+      }
+
+      const lineHeight = parseFloat(getComputedStyle(inputCode).lineHeight) || 22.4
+
+      function scrollToCurrentMatch() {
+        if (findState.currentMatch < 0 || findState.currentMatch >= findState.matches.length) return
+
+        const m = findState.matches[findState.currentMatch]
+        const lineIndex = inputCode.value.substring(0, m.index).split('\n').length - 1
+        inputCode.scrollTop = Math.max(0, lineIndex * lineHeight - inputCode.clientHeight / 2 + lineHeight)
+
+        highlightOverlay.scrollTop = inputCode.scrollTop
+        highlightOverlay.scrollLeft = inputCode.scrollLeft
+      }
+
+      function replaceOne() {
+        if (findState.currentMatch < 0 || findState.currentMatch >= findState.matches.length) return
+
+        const m = findState.matches[findState.currentMatch]
+        const text = inputCode.value
+        const replacement = replaceInput.value
+
+        inputCode.value = text.substring(0, m.index) + replacement + text.substring(m.index + m.length)
+
+        findState.currentMatch = findState.currentMatch >= findState.matches.length - 1 ? 0 : findState.currentMatch
+
+        performFind()
+        updateLineNumbers()
+        debounceSave()
+      }
+
+      function replaceAll() {
+        if (findState.matches.length === 0) return
+        const count = findState.matches.length
+        const text = inputCode.value
+        const replacement = replaceInput.value
+
+        let newText = text
+        for (let i = findState.matches.length - 1; i >= 0; i--) {
+          const m = findState.matches[i]
+          newText = newText.substring(0, m.index) + replacement + newText.substring(m.index + m.length)
+        }
+
+        inputCode.value = newText
+        findState.matches = []
+        findState.currentMatch = -1
+
+        updateMatchCount()
+        updateHighlight()
+        updateLineNumbers()
+        debounceSave()
+        showNotification(`已替换 ${count} 处`, 'success')
+      }
+
+      function openFindPanel() {
+        findState.panelVisible = true
+        findReplacePanel.classList.add('visible')
+
+        const selected = inputCode.value.substring(inputCode.selectionStart, inputCode.selectionEnd)
+        if (selected && !selected.includes('\n')) {
+          findInput.value = selected
+        }
+
+        findInput.focus()
+        findInput.select()
+        performFind()
+      }
+
+      function closeFindPanel() {
+        findState.panelVisible = false
+        findReplacePanel.classList.remove('visible')
+
+        highlightOverlay.innerHTML = ''
+        inputCode.classList.remove('has-highlight')
+        findState.matches = []
+        findState.currentMatch = -1
+        findInput.classList.remove('error')
+        matchCountEl.classList.remove('no-matches')
+
+        inputCode.focus()
+      }
+
+      const debounceFind = debounce(performFind, 150)
+      findInput.addEventListener('input', debounceFind)
+
+      function onPanelKeydown(e) {
+        if (e.key === 'Escape') {
+          e.preventDefault()
+          closeFindPanel()
+        }
+        e.stopPropagation()
+      }
+
+      findInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          goToMatch(e.shiftKey ? 'prev' : 'next')
+        }
+        onPanelKeydown(e)
+      })
+
+      replaceInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault()
+          replaceOne()
+        }
+        onPanelKeydown(e)
+      })
+
+      prevMatchBtn.addEventListener('click', function () { goToMatch('prev') })
+      nextMatchBtn.addEventListener('click', function () { goToMatch('next') })
+
+      for (const [btn, key] of [[caseSensitiveBtn, 'caseSensitive'], [wholeWordBtn, 'wholeWord'], [regexBtn, 'useRegex']]) {
+        btn.addEventListener('click', function () {
+          findState[key] = !findState[key]
+          this.classList.toggle('active', findState[key])
+          performFind()
+        })
+      }
+
+      closeFindBtn.addEventListener('click', closeFindPanel)
+      replaceOneBtn.addEventListener('click', replaceOne)
+      replaceAllBtn.addEventListener('click', replaceAll)
+
+      inputCode.addEventListener('input', function () {
+        if (findState.panelVisible) {
+          debounceFind()
+        }
+      })
+
       // ===== 快捷键 =====
       inputCode.addEventListener('keydown', function (e) {
-        // Ctrl+Enter 运行代码
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
           e.preventDefault()
           runCode()
         }
-        // Ctrl+S 保存代码
         if ((e.ctrlKey || e.metaKey) && e.key === 's') {
           e.preventDefault()
           saveToStorage()
           showNotification('代码已保存', 'success')
+        }
+        if (e.key === 'F3' && findState.panelVisible) {
+          e.preventDefault()
+          goToMatch(e.shiftKey ? 'prev' : 'next')
+        }
+      })
+
+      document.addEventListener('keydown', function (e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+          e.preventDefault()
+          openFindPanel()
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key === 'h') {
+          e.preventDefault()
+          openFindPanel()
         }
       })
 
